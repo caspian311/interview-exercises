@@ -2,7 +2,7 @@ var request = require('supertest')
     , express = require('express')
 , db = require('../../app/models');
 
-describe.only('/articles', function() {
+describe('/articles', function() {
     beforeEach(function(done) {
         db.sequelize
             .sync()
