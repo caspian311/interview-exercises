@@ -1,18 +1,20 @@
 var request = require('supertest')
     , express = require('express')
-, db = require('../../app/models');
+    , expressApp = require('../../config/express')
+    , config = require('../../config/config')
+    , db = require('../../app/models');
 
-describe('/articles', function() {
-    beforeEach(function(done) {
-        db.sequelize
-            .sync()
-            .complete(done);
-    });
+function getApp() {
+    var app = express();
+    expressApp(app, config);
+    return app;
+}
 
-    describe('GET', function() {
-        beforeEach(function(done) {
-            db.Article.findAll().success(function(articles) {
-                articles.forEach(function(article) {
+describe('GET /articles', function () {
+    beforeEach(function (done) {
+        db.sequelize.sync().complete(function () {
+            db.Article.findAll().success(function (articles) {
+                articles.forEach(function (article) {
                     article.destroy();
                 });
 
@@ -20,40 +22,34 @@ describe('/articles', function() {
                     title: 'title 1',
                     url: 'url 1',
                     text: 'text 1'
-                }).success(function() {
+                }).success(function () {
                     done();
                 });
             });
         });
+    });
 
-        afterEach(function(done) {
-            db.Article.findAll().success(function(articles) {
-                articles.forEach(function (article) {
-                    article.destroy();
-                });
+    afterEach(function (done) {
+        db.Article.findAll().success(function (articles) {
+            articles.forEach(function (article) {
+                article.destroy();
+            });
+
+            done();
+        });
+    });
+
+    it('should return a 200', function (done) {
+        request(getApp())
+            .get('/service/articles')
+            .expect(200)
+            .end(function (err, res) {
+                expect(err).to.not.exist;
+
+                expect(res.body.length).to.equal(1);
 
                 done();
             });
-        });
-
-        it('should return a 200', function(done) {
-            var app = express();
-
-            app.get('/user', function(req, res){
-                res.send(200, { name: 'tobi' });
-            });
-
-            request(app)
-                .get('/articles')
-                .expect(200)
-                .end(function(err, res) {
-                    expect(err).to.be.empty;
-
-                    console.dir(res.body);
-
-                    done();
-                });
-        });
     });
 });
 
